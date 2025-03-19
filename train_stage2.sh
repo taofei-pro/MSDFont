@@ -88,14 +88,37 @@ main() {
     # conda activate MSDFont
     
     # 在前台运行训练，重定向输出到日志文件
-    log_debug "执行命令: python main_distri.py --base $CONFIG_PATH -t --gpus $GPUS --logdir /home/zihun/workspace/fontspace/MSDFont/StableDiffusion/logs --name stage2 --postfix ''"
-    python main_distri.py --base $CONFIG_PATH -t --gpus $GPUS --logdir /home/zihun/workspace/fontspace/MSDFont/StableDiffusion/logs --name stage2 --postfix '' 2>&1 | tee -a $TRAIN_LOG
+    log_debug "执行命令: python main_distri.py --base $CONFIG_PATH -t --gpus $GPUS --logdir /home/zihun/workspace/fontspace/MSDFont/StableDiffusion/logs --name stage2"
+    python main_distri.py --base $CONFIG_PATH -t --gpus $GPUS --logdir /home/zihun/workspace/fontspace/MSDFont/StableDiffusion/logs --name stage2 2>&1 | tee -a $TRAIN_LOG
     
     EXIT_CODE=$?
     log_debug "第二阶段训练结束，退出代码: $EXIT_CODE"
     
+    if [ $EXIT_CODE -eq 0 ]; then
+        # 找到最新创建的包含stage2的目录
+        LATEST_DIR=$(find /home/zihun/workspace/fontspace/MSDFont/StableDiffusion/logs -maxdepth 1 -type d -name "*stage2" -printf "%T@ %p\n" | sort -nr | head -n 1 | cut -d' ' -f2-)
+        
+        if [ -n "$LATEST_DIR" ] && [ -d "$LATEST_DIR" ]; then
+            TARGET_DIR="$LOGS_DIR"
+            
+            # 如果目标目录已存在，先删除
+            if [ -d "$TARGET_DIR" ]; then
+                log_debug "删除已存在的目标目录: $TARGET_DIR"
+                rm -rf "$TARGET_DIR"
+            fi
+            
+            # 重命名训练结果目录
+            log_debug "将训练结果从 $LATEST_DIR 重命名为 $TARGET_DIR"
+            mv "$LATEST_DIR" "$TARGET_DIR"
+            
+            log_debug "训练结果已保存到: $TARGET_DIR"
+        else
+            log_debug "未找到训练结果目录"
+        fi
+    fi
+    
     if [ $EXIT_CODE -ne 0 ]; then
-        log_debug "训练异常退出! 请检查日志文件 $TRAIN_LOG 获取详细错误信息。"
+        log_debug "第二阶段训练异常退出! 请检查日志文件 $TRAIN_LOG 获取详细错误信息。"
     fi
     
     return $EXIT_CODE
