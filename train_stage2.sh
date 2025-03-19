@@ -7,7 +7,7 @@ MIN_FREE_SPACE_GB=30
 CHECK_INTERVAL_SECONDS=600
 LOGS_DIR="/home/zihun/workspace/fontspace/MSDFont/StableDiffusion/logs/stage2"
 LOGS_FOLDER="/home/zihun/workspace/fontspace/MSDFont/StableDiffusion/logs/stage2.log"
-TIMESTAMP=$(date '+%Y%m%d_%H%M%S')
+TIMESTAMP=$(date '+%Y-%m-%d_%H:%M:%S')
 DEBUG_LOG="${LOGS_FOLDER}/debug_${TIMESTAMP}.log"
 TRAIN_LOG="${LOGS_FOLDER}/train_${TIMESTAMP}.log"
 
@@ -88,8 +88,8 @@ main() {
     # conda activate MSDFont
     
     # 在前台运行训练，重定向输出到日志文件
-    log_debug "执行命令: python main_distri.py --base $CONFIG_PATH -t --gpus $GPUS --logdir /home/zihun/workspace/fontspace/MSDFont/StableDiffusion/logs --name stage2"
-    python main_distri.py --base $CONFIG_PATH -t --gpus $GPUS --logdir /home/zihun/workspace/fontspace/MSDFont/StableDiffusion/logs --name stage2 2>&1 | tee -a $TRAIN_LOG
+    log_debug "执行命令: python main_distri.py --base $CONFIG_PATH -t --gpus $GPUS --logdir /home/zihun/workspace/fontspace/MSDFont/StableDiffusion/logs --name stage2 --postfix ''"
+    python main_distri.py --base $CONFIG_PATH -t --gpus $GPUS --logdir /home/zihun/workspace/fontspace/MSDFont/StableDiffusion/logs --name stage2 --postfix '' 2>&1 | tee -a $TRAIN_LOG
     
     EXIT_CODE=$?
     log_debug "第二阶段训练结束，退出代码: $EXIT_CODE"
