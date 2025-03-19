@@ -96,8 +96,8 @@ main() {
     log_debug "启动训练..."
     
     # 在前台运行训练，重定向输出到日志文件
-    log_debug "执行命令: python main.py --base $CONFIG_PATH -t --gpus $GPUS"
-    python main.py --base $CONFIG_PATH -t --gpus $GPUS 2>&1 | tee -a "${LOGS_DIR}/train.log"
+    log_debug "执行命令: python main.py --base $CONFIG_PATH -t --gpus $GPUS --logdir /home/zihun/workspace/fontspace/MSDFont/StableDiffusion/logs"
+    python main.py --base $CONFIG_PATH -t --gpus $GPUS --logdir /home/zihun/workspace/fontspace/MSDFont/StableDiffusion/logs 2>&1 | tee -a "${LOGS_DIR}/train.log"
     
     EXIT_CODE=$?
     log_debug "训练结束，退出代码: $EXIT_CODE"
