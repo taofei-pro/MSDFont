@@ -20,9 +20,6 @@ if [ -d "$LOGS_DIR" ]; then
     rm -rf $LOGS_DIR/*
 fi
 
-# 创建训练目录
-mkdir -p $LOGS_DIR
-
 # 记录调试信息的函数
 log_debug() {
     echo "[$(date '+%Y-%m-%d %H:%M:%S')] $1" | tee -a $DEBUG_LOG
