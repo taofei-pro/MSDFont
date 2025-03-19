@@ -1,0 +1,27 @@
+# Python缓存文件
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+
+# 日志和临时文件
+*.log
+*.tmp
+*.bak
+*.swp
+*~
+
+# 特别指定的大文件和模型文件
+*.ckpt
+*.pth
+
+# 虚拟环境
+venv/
+env/
+.env/
+
+
+# 系统文件
+.DS_Store
+Thumbs.db
