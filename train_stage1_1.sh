@@ -6,9 +6,21 @@ GPUS="0,"
 MIN_FREE_SPACE_GB=30
 CHECK_INTERVAL_SECONDS=600
 LOGS_DIR="/home/zihun/workspace/fontspace/MSDFont/StableDiffusion/logs/stage1_1"
-DEBUG_LOG="${LOGS_DIR}/debug.log"
+LOGS_FOLDER="/home/zihun/workspace/fontspace/MSDFont/StableDiffusion/logs/stage1_1.log"
+TIMESTAMP=$(date '+%Y%m%d_%H%M%S')
+DEBUG_LOG="${LOGS_FOLDER}/debug_${TIMESTAMP}.log"
+TRAIN_LOG="${LOGS_FOLDER}/train_${TIMESTAMP}.log"
 
 # 创建日志目录
+mkdir -p $LOGS_FOLDER
+
+# 清空之前的训练产物
+if [ -d "$LOGS_DIR" ]; then
+    echo "清空之前的训练产物..."
+    rm -rf $LOGS_DIR/*
+fi
+
+# 创建训练目录
 mkdir -p $LOGS_DIR
 
 # 记录调试信息的函数
@@ -19,6 +31,7 @@ log_debug() {
 log_debug "训练脚本开始执行"
 log_debug "配置文件: $CONFIG_PATH"
 log_debug "使用GPU: $GPUS"
+log_debug "训练时间戳: $TIMESTAMP"
 
 # 禁用 DeepSpeed
 export PL_DISABLE_DEEPSPEED=1
@@ -96,14 +109,14 @@ main() {
     log_debug "启动训练..."
     
     # 在前台运行训练，重定向输出到日志文件
-    log_debug "执行命令: python main.py --base $CONFIG_PATH -t --gpus $GPUS --logdir /home/zihun/workspace/fontspace/MSDFont/StableDiffusion/logs"
-    python main.py --base $CONFIG_PATH -t --gpus $GPUS --logdir /home/zihun/workspace/fontspace/MSDFont/StableDiffusion/logs 2>&1 | tee -a "${LOGS_DIR}/train.log"
+    log_debug "执行命令: python main.py --base $CONFIG_PATH -t --gpus $GPUS"
+    python main.py --base $CONFIG_PATH -t --gpus $GPUS --logdir /home/zihun/workspace/fontspace/MSDFont/StableDiffusion/logs --name stage1_1 2>&1 | tee -a $TRAIN_LOG
     
     EXIT_CODE=$?
     log_debug "训练结束，退出代码: $EXIT_CODE"
     
     if [ $EXIT_CODE -ne 0 ]; then
-        log_debug "训练异常退出! 请检查日志文件 ${LOGS_DIR}/train.log 获取详细错误信息。"
+        log_debug "训练异常退出! 请检查日志文件 $TRAIN_LOG 获取详细错误信息。"
     fi
     
     return $EXIT_CODE

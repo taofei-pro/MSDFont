@@ -6,17 +6,40 @@ GPUS="0,"
 MIN_FREE_SPACE_GB=30
 CHECK_INTERVAL_SECONDS=600
 LOGS_DIR="/home/zihun/workspace/fontspace/MSDFont/StableDiffusion/logs/stage2"
+LOGS_FOLDER="/home/zihun/workspace/fontspace/MSDFont/StableDiffusion/logs/stage2.log"
+TIMESTAMP=$(date '+%Y%m%d_%H%M%S')
+DEBUG_LOG="${LOGS_FOLDER}/debug_${TIMESTAMP}.log"
+TRAIN_LOG="${LOGS_FOLDER}/train_${TIMESTAMP}.log"
 
 # 创建日志目录
+mkdir -p $LOGS_FOLDER
+
+# 清空之前的训练产物
+if [ -d "$LOGS_DIR" ]; then
+    echo "清空之前的训练产物..." | tee -a $DEBUG_LOG
+    rm -rf $LOGS_DIR/*
+fi
+
+# 创建训练目录
 mkdir -p $LOGS_DIR
+
+# 记录调试信息的函数
+log_debug() {
+    echo "[$(date '+%Y-%m-%d %H:%M:%S')] $1" | tee -a $DEBUG_LOG
+}
+
+log_debug "训练脚本开始执行"
+log_debug "配置文件: $CONFIG_PATH"
+log_debug "使用GPU: $GPUS"
+log_debug "训练时间戳: $TIMESTAMP"
 
 # 检查磁盘空间函数
 check_disk_space() {
     local free_space=$(df -BG --output=avail $LOGS_DIR | tail -n 1 | tr -d 'G')
-    echo "当前可用磁盘空间: ${free_space}GB"
+    log_debug "当前可用磁盘空间: ${free_space}GB"
     
     if [ $free_space -lt $MIN_FREE_SPACE_GB ]; then
-        echo "磁盘空间不足! 当前可用: ${free_space}GB, 最小要求: ${MIN_FREE_SPACE_GB}GB"
+        log_debug "磁盘空间不足! 当前可用: ${free_space}GB, 最小要求: ${MIN_FREE_SPACE_GB}GB"
         return 1
     fi
     
@@ -25,7 +48,7 @@ check_disk_space() {
 
 # 清理旧的检查点文件
 clean_old_checkpoints() {
-    echo "开始清理旧的检查点文件..."
+    log_debug "开始清理旧的检查点文件..."
     
     # 保留最新的last.ckpt和最新的3个epoch检查点
     for ckpt_dir in $(find $LOGS_DIR -type d -name "checkpoints"); do
@@ -43,54 +66,41 @@ clean_old_checkpoints() {
         find "$ckpt_dir" -name "*.ckpt" -type f -not -newermt "1 minute ago" -delete
     done
     
-    echo "清理完成"
+    log_debug "清理完成"
 }
 
 # 主循环
 main() {
     # 首先检查磁盘空间
     if ! check_disk_space; then
-        echo "尝试清理空间..."
+        log_debug "尝试清理空间..."
         clean_old_checkpoints
         
         # 再次检查空间
         if ! check_disk_space; then
-            echo "清理后磁盘空间仍然不足! 请手动清理空间后重试。"
+            log_debug "清理后磁盘空间仍然不足! 请手动清理空间后重试。"
             exit 1
         fi
     fi
     
     # 启动训练
-    echo "启动第二阶段训练..."
+    log_debug "启动第二阶段训练..."
     # conda activate MSDFont
     
-    # 在后台运行训练
-    python main_distri.py --base $CONFIG_PATH -t --gpus $GPUS &
-    TRAIN_PID=$!
+    # 在前台运行训练，重定向输出到日志文件
+    log_debug "执行命令: python main_distri.py --base $CONFIG_PATH -t --gpus $GPUS --logdir /home/zihun/workspace/fontspace/MSDFont/StableDiffusion/logs --name stage2"
+    python main_distri.py --base $CONFIG_PATH -t --gpus $GPUS --logdir /home/zihun/workspace/fontspace/MSDFont/StableDiffusion/logs --name stage2 2>&1 | tee -a $TRAIN_LOG
     
-    # 监控磁盘空间
-    while kill -0 $TRAIN_PID 2>/dev/null; do
-        sleep $CHECK_INTERVAL_SECONDS
-        
-        if ! check_disk_space; then
-            echo "磁盘空间不足，尝试清理..."
-            clean_old_checkpoints
-            
-            if ! check_disk_space; then
-                echo "清理后磁盘空间仍然不足! 停止训练..."
-                kill $TRAIN_PID
-                exit 1
-            fi
-        fi
-    done
-    
-    # 等待训练进程结束
-    wait $TRAIN_PID
     EXIT_CODE=$?
+    log_debug "第二阶段训练结束，退出代码: $EXIT_CODE"
     
-    echo "第二阶段训练结束，退出代码: $EXIT_CODE"
+    if [ $EXIT_CODE -ne 0 ]; then
+        log_debug "训练异常退出! 请检查日志文件 $TRAIN_LOG 获取详细错误信息。"
+    fi
+    
     return $EXIT_CODE
 }
 
 # 执行主函数
 main
+log_debug "训练脚本执行完毕"
