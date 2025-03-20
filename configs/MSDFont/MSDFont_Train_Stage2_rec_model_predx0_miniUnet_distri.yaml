@@ -18,9 +18,8 @@ model:
     conditioning_key: crossattn
     monitor: val/loss_simple_ema
     scale_factor: 0.18215
-    use_ema: False 
-    # ckpt_path: /home/zihun/workspace/fontspace/MSDFont/StableDiffusion/checkpoints/v2-1_512-ema-pruned.ckpt
-    ckpt_path: /home/zihun/workspace/fontspace/MSDFont/StableDiffusion/logs/rec_stage_epoch=79.ckpt
+    use_ema: False
+    ckpt_path: /home/zihun/workspace/fontspace/MSDFont/StableDiffusion/logs/stage1_2/checkpoints/last.ckpt
 
     unet_config:
       target: ldm.modules.diffusionmodules.openaimodel.UNetModel
@@ -44,8 +43,7 @@ model:
     first_stage_config:
       target: ldm.models.autoencoder.AutoencoderKL
       params:
-        # ckpt_path: /home/zihun/workspace/fontspace/MSDFont/StableDiffusion/checkpoints/v2-1_512-ema-pruned.ckpt
-        ckpt_path: /home/zihun/workspace/fontspace/MSDFont/StableDiffusion/logs/rec_stage_epoch=79.ckpt
+        ckpt_path: /home/zihun/workspace/fontspace/MSDFont/StableDiffusion/logs/stage1_2/checkpoints/last.ckpt
         embed_dim: 4
         monitor: val/rec_loss
         ddconfig:
@@ -73,7 +71,7 @@ model:
 
     trans_model_config:
       config_path: "configs/MSDFont/MSDFont_Train_Stage1_trans_model_predx0_miniUnet.yaml"
-      model_path: "/home/zihun/workspace/fontspace/MSDFont/StableDiffusion/logs/trans_epoch=79.ckpt"
+      model_path: "/home/zihun/workspace/fontspace/MSDFont/StableDiffusion/logs/stage1_1/checkpoints/last.ckpt"
 
 data:
   target: main.DataModuleFromConfig

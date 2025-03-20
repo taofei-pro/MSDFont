@@ -1,3 +1,11 @@
 {
-    "python.languageServer": "None"
+    "python.languageServer": "None",
+    "cSpell.words": [
+        "ckpt",
+        "fontspace",
+        "logdir",
+        "modelckpt",
+        "ttfs",
+        "zihun"
+    ]
 }
