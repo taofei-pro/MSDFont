@@ -4,6 +4,7 @@
         "ckpt",
         "fontspace",
         "logdir",
+        "modelckpt",
         "ttfs",
         "zihun"
     ]

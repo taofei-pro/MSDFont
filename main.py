@@ -660,8 +660,8 @@ if __name__ == "__main__":
             print(f"Monitoring {model.monitor} as checkpoint metric.")
             default_modelckpt_cfg["params"]["monitor"] = None
             # default_modelckpt_cfg["params"]["monitor"] = model.monitor
-            default_modelckpt_cfg["params"]["save_top_k"] = -1
-            default_modelckpt_cfg["params"]["every_n_epochs"] = 2
+            default_modelckpt_cfg["params"]["save_top_k"] = 3
+            default_modelckpt_cfg["params"]["every_n_epochs"] = None
 
         # ###########################################################
         # # only last.ckpt
@@ -755,7 +755,7 @@ if __name__ == "__main__":
                         "filename": "{epoch:06}-{step:09}",
                         "verbose": True,
                         "save_top_k": 3,
-                        "every_n_train_steps": 10000,
+                        "every_n_train_steps": 50000,
                         "save_weights_only": True,
                     },
                 }
