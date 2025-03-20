@@ -13,6 +13,7 @@ TRAIN_LOG="${LOGS_FOLDER}/train_${TIMESTAMP}.log"
 
 # 创建日志目录
 mkdir -p $LOGS_FOLDER
+mkdir -p $LOGS_DIR
 
 # 清空之前的训练产物
 if [ -d "$LOGS_DIR" ]; then
@@ -29,6 +30,14 @@ log_debug "训练脚本开始执行"
 log_debug "配置文件: $CONFIG_PATH"
 log_debug "使用GPU: $GPUS"
 log_debug "训练时间戳: $TIMESTAMP"
+
+# 禁用 DeepSpeed
+export PL_DISABLE_DEEPSPEED=1
+log_debug "已禁用 DeepSpeed (PL_DISABLE_DEEPSPEED=1)"
+
+# 设置 ModelCheckpoint 的 monitor 参数
+export PL_MONITOR_METRIC="val/loss_simple_ema"
+log_debug "设置监控指标: $PL_MONITOR_METRIC"
 
 # 检查磁盘空间函数
 check_disk_space() {

@@ -642,65 +642,30 @@ if __name__ == "__main__":
 
         # modelcheckpoint - use TrainResult/EvalResult(checkpoint_on=metric) to
         # specify which metric is used to determine best models
-        ###########################################################
-        # all ckpt for every 2 checkpoints
-        ##########################################################
         default_modelckpt_cfg = {
             "target": "pytorch_lightning.callbacks.ModelCheckpoint",
             "params": {
                 "dirpath": ckptdir,
-                # "filename": "{epoch:06}",
                 "filename": "{epoch}-{step}",
                 "verbose": True,
                 "save_last": True,
-                # "every_n_train_steps": 20,
+                "monitor": "val/loss_simple_ema",  # 直接硬编码 monitor 参数
+                "save_top_k": 3,
             },
         }
         if hasattr(model, "monitor"):
             print(f"Monitoring {model.monitor} as checkpoint metric.")
-            default_modelckpt_cfg["params"]["monitor"] = None
-            # default_modelckpt_cfg["params"]["monitor"] = model.monitor
+            default_modelckpt_cfg["params"]["monitor"] = model.monitor
+        else:
+            print(f"Monitoring val/loss_simple_ema as checkpoint metric.")
             default_modelckpt_cfg["params"]["save_top_k"] = 3
             default_modelckpt_cfg["params"]["every_n_epochs"] = None
-
-        # ###########################################################
-        # # only last.ckpt
-        # ##########################################################
-        # default_modelckpt_cfg = {
-        #     "target": "pytorch_lightning.callbacks.ModelCheckpoint",
-        #     "params": {
-        #         "dirpath": ckptdir,
-        #         "filename": "{epoch:06}",
-        #         "verbose": True,
-        #         "save_last": True,
-        #     }
-        # }
-        # if hasattr(model, "monitor"):
-        #     print(f"Monitoring {model.monitor} as checkpoint metric.")
-        #     default_modelckpt_cfg["params"]["monitor"] = model.monitor
-        #     default_modelckpt_cfg["params"]["save_top_k"] = 3
-        #################################################################
-
-        # modelcheckpoint - use TrainResult/EvalResult(checkpoint_on=metric) to
-        # specify which metric is used to determine best models
-        # default_modelckpt_cfg = {
-        #     "target": "pytorch_lightning.callbacks.ModelCheckpoint",
-        #     "params": {
-        #         "dirpath": ckptdir,
-        #         "filename": "{epoch:06}",
-        #         "verbose": True,
-        #         "save_last": True,
-        #     }
-        # }
-        # if hasattr(model, "monitor"):
-        #     print(f"Monitoring {model.monitor} as checkpoint metric.")
-        #     default_modelckpt_cfg["params"]["monitor"] = model.monitor
-        #     default_modelckpt_cfg["params"]["save_top_k"] = 3
-
+        
         if "modelcheckpoint" in lightning_config:
             modelckpt_cfg = lightning_config.modelcheckpoint
         else:
             modelckpt_cfg = OmegaConf.create()
+        
         modelckpt_cfg = OmegaConf.merge(default_modelckpt_cfg, modelckpt_cfg)
         print(f"Merged modelckpt-cfg: \n{modelckpt_cfg}")
         if version.parse(pl.__version__) < version.parse("1.4.0"):
@@ -757,21 +722,13 @@ if __name__ == "__main__":
                         "save_top_k": 3,
                         "every_n_train_steps": 50000,
                         "save_weights_only": True,
+                        "monitor": "val/loss_simple_ema",
                     },
                 }
             }
             default_callbacks_cfg.update(default_metrics_over_trainsteps_ckpt_dict)
 
         callbacks_cfg = OmegaConf.merge(default_callbacks_cfg, callbacks_cfg)
-        if "ignore_keys_callback" in callbacks_cfg and hasattr(
-            trainer_opt, "resume_from_checkpoint"
-        ):
-            callbacks_cfg.ignore_keys_callback.params["ckpt_path"] = (
-                trainer_opt.resume_from_checkpoint
-            )
-        elif "ignore_keys_callback" in callbacks_cfg:
-            del callbacks_cfg["ignore_keys_callback"]
-
         trainer_kwargs["callbacks"] = [
             instantiate_from_config(callbacks_cfg[k]) for k in callbacks_cfg
         ]
