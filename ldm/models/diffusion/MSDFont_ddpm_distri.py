@@ -61,7 +61,7 @@ class MSDFont_train_stage2_rec_model_distri(LatentDiffusion):
 
         self.instantiate_trans_stage(trans_model_config)
         self.device1 = 'cuda:0'
-        self.device2 = 'cuda:1'
+        self.device2 = 'cuda:0'
         self.trans_stage_model = self.trans_stage_model.to(self.device2)
         print('self.trans_stage_model.device', self.trans_stage_model.device)
         

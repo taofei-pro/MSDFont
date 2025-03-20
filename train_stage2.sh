@@ -14,6 +14,7 @@ MAX_EPOCHS=10  # 设置最大训练轮数，stage2容易过拟合，建议5-20�
 
 # 创建日志目录
 mkdir -p $LOGS_FOLDER
+mkdir -p $LOGS_DIR
 
 # 清空之前的训练产物
 if [ -d "$LOGS_DIR" ]; then
@@ -30,6 +31,7 @@ log_debug "训练脚本开始执行"
 log_debug "配置文件: $CONFIG_PATH"
 log_debug "使用GPU: $GPUS"
 log_debug "训练时间戳: $TIMESTAMP"
+log_debug "最大训练轮数: $MAX_EPOCHS"
 
 # 检查磁盘空间函数
 check_disk_space() {
@@ -90,8 +92,8 @@ main() {
     export PL_MONITOR_METRIC="val/loss_simple_ema"
     
     # 在前台运行训练，重定向输出到日志文件
-    log_debug "执行命令: python main_distri.py --base $CONFIG_PATH -t --gpus $GPUS --logdir /home/zihun/workspace/fontspace/MSDFont/StableDiffusion/logs --name stage2 --max_epochs $MAX_EPOCHS"
-    python main_distri.py --base $CONFIG_PATH -t --gpus $GPUS --logdir /home/zihun/workspace/fontspace/MSDFont/StableDiffusion/logs --name stage2 --max_epochs $MAX_EPOCHS 2>&1 | tee -a $TRAIN_LOG
+    log_debug "执行命令: python main_distri.py --base $CONFIG_PATH -t --gpus $GPUS --logdir /home/zihun/workspace/fontspace/MSDFont/StableDiffusion/logs --name stage2 --epochs $MAX_EPOCHS"
+    python main_distri.py --base $CONFIG_PATH -t --gpus $GPUS --logdir /home/zihun/workspace/fontspace/MSDFont/StableDiffusion/logs --name stage2 --epochs $MAX_EPOCHS 2>&1 | tee -a $TRAIN_LOG
     
     EXIT_CODE=$?
     log_debug "第二阶段训练结束，退出代码: $EXIT_CODE"

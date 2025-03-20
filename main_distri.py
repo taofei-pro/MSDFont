@@ -121,7 +121,7 @@ def get_parser(**parser_kwargs):
         help="scale base-lr by ngpu * batch_size * n_accumulate",
     )
     parser.add_argument(
-        "--max_epochs",
+        "--epochs",
         type=int,
         default=1000,
         help="maximum number of training epochs",
@@ -555,9 +555,9 @@ if __name__ == "__main__":
         trainer_config["accelerator"] = "ddp_distri"
         
         # 确保max_epochs参数被设置
-        if opt.max_epochs is not None:
-            trainer_config["max_epochs"] = opt.max_epochs
-            print(f"设置最大训练轮数为: {opt.max_epochs}")
+        if opt.epochs is not None:
+            trainer_config["max_epochs"] = opt.epochs
+            print(f"设置最大训练轮数为: {opt.epochs}")
         
         for k in nondefault_trainer_args(opt):
             trainer_config[k] = getattr(opt, k)
