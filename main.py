@@ -118,6 +118,12 @@ def get_parser(**parser_kwargs):
         default=True,
         help="scale base-lr by ngpu * batch_size * n_accumulate",
     )
+    parser.add_argument(
+        "--max_epochs",
+        type=int,
+        default=None,
+        help="maximum number of epochs to train",
+    )
     return parser
 
 
@@ -733,12 +739,11 @@ if __name__ == "__main__":
             instantiate_from_config(callbacks_cfg[k]) for k in callbacks_cfg
         ]
 
-        # 添加max_epochs参数，设置为1000
-        if "max_epochs" not in lightning_config.trainer:
-            lightning_config.trainer.max_epochs = 1000
-            print(
-                f"设置最大训练轮数 max_epochs = {lightning_config.trainer.max_epochs}"
-            )
+        # 不再硬编码max_epochs，而是通过命令行参数或配置文件设置
+        # 如果命令行参数中有max_epochs，则使用命令行参数的值
+        if hasattr(opt, "max_epochs") and opt.max_epochs is not None:
+            lightning_config.trainer.max_epochs = opt.max_epochs
+            print(f"从命令行参数设置最大训练轮数 max_epochs = {lightning_config.trainer.max_epochs}")
 
         trainer = Trainer.from_argparse_args(trainer_opt, **trainer_kwargs)
         trainer.logdir = logdir  ###
