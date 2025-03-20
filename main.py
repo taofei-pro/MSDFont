@@ -776,6 +776,13 @@ if __name__ == "__main__":
             instantiate_from_config(callbacks_cfg[k]) for k in callbacks_cfg
         ]
 
+        # 添加max_epochs参数，设置为1000
+        if "max_epochs" not in lightning_config.trainer:
+            lightning_config.trainer.max_epochs = 1000
+            print(
+                f"设置最大训练轮数 max_epochs = {lightning_config.trainer.max_epochs}"
+            )
+
         trainer = Trainer.from_argparse_args(trainer_opt, **trainer_kwargs)
         trainer.logdir = logdir  ###
 
