@@ -120,6 +120,12 @@ def get_parser(**parser_kwargs):
         default=True,
         help="scale base-lr by ngpu * batch_size * n_accumulate",
     )
+    parser.add_argument(
+        "--max_epochs",
+        type=int,
+        default=1000,
+        help="maximum number of training epochs",
+    )
     return parser
 
 
@@ -547,6 +553,12 @@ if __name__ == "__main__":
         # default to ddp
         # trainer_config["accelerator"] = "ddp"
         trainer_config["accelerator"] = "ddp_distri"
+        
+        # 确保max_epochs参数被设置
+        if opt.max_epochs is not None:
+            trainer_config["max_epochs"] = opt.max_epochs
+            print(f"设置最大训练轮数为: {opt.max_epochs}")
+        
         for k in nondefault_trainer_args(opt):
             trainer_config[k] = getattr(opt, k)
         if not "gpus" in trainer_config:
@@ -595,9 +607,6 @@ if __name__ == "__main__":
 
         # modelcheckpoint - use TrainResult/EvalResult(checkpoint_on=metric) to
         # specify which metric is used to determine best models
-        ###########################################################
-        # all ckpt for every 2 checkpoints
-        ##########################################################
         default_modelckpt_cfg = {
             "target": "pytorch_lightning.callbacks.ModelCheckpoint",
             "params": {
@@ -606,51 +615,16 @@ if __name__ == "__main__":
                 "filename": "{epoch}-{step}",
                 "verbose": True,
                 "save_last": True,
-                # "every_n_train_steps": 20,
+                "monitor": "val/loss_simple_ema",  # 使用验证集损失作为监控指标
+                "save_top_k": 3,  # 保存最好的3个模型
+                "every_n_epochs": 2,  # 每2个epoch保存一次
+                "mode": "min",  # 因为是监控损失，所以使用min模式
             }
         }
         if hasattr(model, "monitor"):
             print(f"Monitoring {model.monitor} as checkpoint metric.")
-            default_modelckpt_cfg["params"]["monitor"] = None
-            # default_modelckpt_cfg["params"]["monitor"] = model.monitor
-            default_modelckpt_cfg["params"]["save_top_k"] = -1
-            default_modelckpt_cfg["params"]["every_n_epochs"] = 2
-        
-        # ###########################################################
-        # # only last.ckpt
-        # ##########################################################
-        # default_modelckpt_cfg = {
-        #     "target": "pytorch_lightning.callbacks.ModelCheckpoint",
-        #     "params": {
-        #         "dirpath": ckptdir,
-        #         "filename": "{epoch:06}",
-        #         "verbose": True,
-        #         "save_last": True,
-        #     }
-        # }
-        # if hasattr(model, "monitor"):
-        #     print(f"Monitoring {model.monitor} as checkpoint metric.")
-        #     default_modelckpt_cfg["params"]["monitor"] = model.monitor
-        #     default_modelckpt_cfg["params"]["save_top_k"] = 3
-        #################################################################
-
-
-        # modelcheckpoint - use TrainResult/EvalResult(checkpoint_on=metric) to
-        # specify which metric is used to determine best models
-        # default_modelckpt_cfg = {
-        #     "target": "pytorch_lightning.callbacks.ModelCheckpoint",
-        #     "params": {
-        #         "dirpath": ckptdir,
-        #         "filename": "{epoch:06}",
-        #         "verbose": True,
-        #         "save_last": True,
-        #     }
-        # }
-        # if hasattr(model, "monitor"):
-        #     print(f"Monitoring {model.monitor} as checkpoint metric.")
-        #     default_modelckpt_cfg["params"]["monitor"] = model.monitor
-        #     default_modelckpt_cfg["params"]["save_top_k"] = 3
-
+            if model.monitor is not None:
+                default_modelckpt_cfg["params"]["monitor"] = model.monitor
         if "modelcheckpoint" in lightning_config:
             modelckpt_cfg = lightning_config.modelcheckpoint
         else:
@@ -703,7 +677,7 @@ if __name__ == "__main__":
 
         if 'metrics_over_trainsteps_checkpoint' in callbacks_cfg:
             print(
-                'Caution: Saving checkpoints every n train steps without deleting. This might require some free space.')
+                '注意: 每n个训练步保存检查点而不删除。这可能需要一些额外的磁盘空间。')
             default_metrics_over_trainsteps_ckpt_dict = {
                 'metrics_over_trainsteps_checkpoint':
                     {"target": 'pytorch_lightning.callbacks.ModelCheckpoint',
@@ -711,9 +685,11 @@ if __name__ == "__main__":
                          "dirpath": os.path.join(ckptdir, 'trainstep_checkpoints'),
                          "filename": "{epoch:06}-{step:09}",
                          "verbose": True,
-                         'save_top_k': -1,
-                         'every_n_train_steps': 10000,
-                         'save_weights_only': True
+                         'save_top_k': 3,  # 只保存最好的3个模型
+                         'every_n_train_steps': 10000,  # 每10000步保存一次
+                         'save_weights_only': True,
+                         'monitor': "val/loss_simple_ema",  # 使用验证集损失作为监控指标
+                         'mode': "min",  # 因为是监控损失，所以使用min模式
                      }
                      }
             }

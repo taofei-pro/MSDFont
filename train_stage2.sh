@@ -10,6 +10,7 @@ LOGS_FOLDER="/home/zihun/workspace/fontspace/MSDFont/StableDiffusion/logs/stage2
 TIMESTAMP=$(date '+%Y-%m-%d_%H:%M:%S')
 DEBUG_LOG="${LOGS_FOLDER}/debug_${TIMESTAMP}.log"
 TRAIN_LOG="${LOGS_FOLDER}/train_${TIMESTAMP}.log"
+MAX_EPOCHS=10  # 设置最大训练轮数，stage2容易过拟合，建议5-20轮
 
 # 创建日志目录
 mkdir -p $LOGS_FOLDER
@@ -84,9 +85,13 @@ main() {
     log_debug "启动第二阶段训练..."
     # conda activate MSDFont
     
+    # 设置环境变量
+    export PL_DISABLE_DEEPSPEED=1
+    export PL_MONITOR_METRIC="val/loss_simple_ema"
+    
     # 在前台运行训练，重定向输出到日志文件
-    log_debug "执行命令: python main_distri.py --base $CONFIG_PATH -t --gpus $GPUS --logdir /home/zihun/workspace/fontspace/MSDFont/StableDiffusion/logs --name stage2"
-    python main_distri.py --base $CONFIG_PATH -t --gpus $GPUS --logdir /home/zihun/workspace/fontspace/MSDFont/StableDiffusion/logs --name stage2 2>&1 | tee -a $TRAIN_LOG
+    log_debug "执行命令: python main_distri.py --base $CONFIG_PATH -t --gpus $GPUS --logdir /home/zihun/workspace/fontspace/MSDFont/StableDiffusion/logs --name stage2 --max_epochs $MAX_EPOCHS"
+    python main_distri.py --base $CONFIG_PATH -t --gpus $GPUS --logdir /home/zihun/workspace/fontspace/MSDFont/StableDiffusion/logs --name stage2 --max_epochs $MAX_EPOCHS 2>&1 | tee -a $TRAIN_LOG
     
     EXIT_CODE=$?
     log_debug "第二阶段训练结束，退出代码: $EXIT_CODE"
