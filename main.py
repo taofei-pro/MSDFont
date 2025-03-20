@@ -659,7 +659,7 @@ if __name__ == "__main__":
         else:
             print(f"Monitoring val/loss_simple_ema as checkpoint metric.")
             default_modelckpt_cfg["params"]["save_top_k"] = 3
-            default_modelckpt_cfg["params"]["every_n_epochs"] = None
+            default_modelckpt_cfg["params"]["every_n_epochs"] = 10
 
         if "modelcheckpoint" in lightning_config:
             modelckpt_cfg = lightning_config.modelcheckpoint
