@@ -317,8 +317,7 @@ if __name__ == "__main__":
 
                         for gen_img in x_gen:
                             char = gchars[iter]
-                            # save_char_name = char
-                            save_char_name = char.encode("utf-8").decode("latin1") # some system need transfer encoding to save chinese file
+                            save_char_name = char
                             genpath = genimgs_save_dir / key / f"{save_char_name}.png"
                             img = custom_to_pil(gen_img)
                             img.save(genpath)
