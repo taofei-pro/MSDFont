@@ -1,4 +1,4 @@
-CUDA_VISIBLE_DEVICES=3 python scripts/MSDFont_eval.py \
+CUDA_VISIBLE_DEVICES=0 python scripts/MSDFont_eval.py \
 --outdir results/infer_result \
 --path_genchar FontData/chn/eval_unseen_chars.json \
 --path_refchar FontData/chn/ref_chars.json \
